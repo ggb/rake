@@ -1,0 +1,2 @@
+defmodule Rake do
+end
