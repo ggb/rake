@@ -64,7 +64,13 @@ defmodule Rake do
     end
   end
   
-  def get_phrases([], phrases, ""), do: phrases
+  def get_phrases([], phrases, "") do 
+    phrases
+    |> Enum.map(fn phrase ->
+      phrase |> String.downcase |> String.strip 
+    end)
+  end
+    
   def get_phrases([], phrases, phrase), do: [ phrase | phrases ]
   
   @doc """
@@ -129,6 +135,7 @@ defmodule Rake do
     
     calculate_phrase_scores(phrases |> Enum.uniq, word_scores)
     |> Enum.filter(fn { _phrase, score } -> score > 0.0 end)
+    |> Enum.sort(fn { _, fst}, { _, scd } -> fst > scd end) 
   end
 
 end
