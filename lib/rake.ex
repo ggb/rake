@@ -50,33 +50,33 @@ defmodule Rake do
   def cooccurrence_and_counts([], cooccurence, counts), do: { cooccurence, counts }
   
   # helper function
-  defp phrase_helper("", min_word_char_count, tail, phrases) do 
-    get_phrases( tail, min_word_char_count, phrases, "" )
+  defp phrase_helper("", tail, phrases, min_word_char_count) do 
+    get_phrases( tail, phrases, "", min_word_char_count )
   end
   
-  defp phrase_helper(words, min_word_char_count, tail, phrases) do
-    get_phrases( tail, min_word_char_count, [ words | phrases ], "" )
+  defp phrase_helper(words, tail, phrases, min_word_char_count) do
+    get_phrases( tail, [ words | phrases ], "", min_word_char_count )
   end
   
   @doc """
   
   """
-  def get_phrases( [ head | tail ], min_word_char_count, phrases, words ) do
+  def get_phrases( [ head | tail ], phrases, words, min_word_char_count ) do
     if Set.member?(@stopwords, String.downcase(head)) or head == "||" or String.length(head) < min_word_char_count do
-      phrase_helper(words, min_word_char_count, tail, phrases)
+      phrase_helper(words, tail, phrases, min_word_char_count)
     else
-      get_phrases( tail, min_word_char_count, phrases, "#{words} #{head}" )
+      get_phrases( tail, phrases, "#{words} #{head}", min_word_char_count )
     end
   end
   
-  def get_phrases([], min_word_char_count, phrases, "") do 
+  def get_phrases([], phrases, "", _min_word_char_count) do 
     phrases
     |> Enum.map(fn phrase ->
       phrase |> String.downcase |> String.strip 
     end)
   end
     
-  def get_phrases([], min_word_char_count, phrases, phrase), do: [ phrase | phrases ]
+  def get_phrases([], phrases, phrase, _min_word_char_count), do: [ phrase | phrases ]
   
   @doc """
   
@@ -105,7 +105,7 @@ defmodule Rake do
   @doc """
   
   """  
-  def calculate_phrase_scores(min_phrase_length, max_phrase_length, min_keyword_appearence_count, phrases, word_scores) do
+  def calculate_phrase_scores(word_scores, min_phrase_length, max_phrase_length, min_keyword_appearence_count, phrases) do
     Enum.reduce(phrases, [], fn phrase, list ->
       words = String.split(phrase, " ", trim: true)
       if length(words) < min_phrase_length or length(words) > max_phrase_length do
@@ -129,7 +129,7 @@ defmodule Rake do
   """
   def get(text, min_word_char_count, min_phrase_length, max_phrase_length, min_keyword_appearence_count) when is_binary(text) do    
     phrases = prepare_text(text)
-    |> get_phrases([], min_word_char_count, "")
+    |> get_phrases([], "", min_word_char_count)
     |> Enum.map(fn phrase ->
       phrase |> String.downcase |> String.strip 
     end)
