@@ -10,11 +10,24 @@ defmodule RakeTest do
     assert candidates == Rake.prepare_text(@text) |> Rake.get_phrases([], "", 1)
   end
 
+  test "calculate word cooccurrance" do
+    phrases = Rake.prepare_text(@text) |> Rake.get_phrases([], "", 1)
+    { cooccurrance, _counts } = phrases |> Rake.cooccurrence_and_counts(HashDict.new, HashDict.new)
+    
+    assert HashDict.get(cooccurrance, "numbers") |> HashDict.to_list == [{"natural", 1}, {"criteria", 1}]
+    assert HashDict.get(cooccurrance, "bounds") |> HashDict.to_list == [{"upper", 1}]
+    assert HashDict.get(cooccurrance, "minimal") |> HashDict.to_list == [{"supporting", 1}, {"generating", 1}, {"set", 2}, {"sets", 1}]
+    assert HashDict.get(cooccurrance, "criteria") |> HashDict.to_list == [{"natural", 1}, {"numbers", 1}]
+  end
+
   test "calculate word counts" do
     phrases = Rake.prepare_text(@text) |> Rake.get_phrases([], "", 1)
-    word_scores = phrases |> Rake.cooccurrence_and_counts(HashDict.new, HashDict.new)
+    { _cooccurrance, counts } = phrases |> Rake.cooccurrence_and_counts(HashDict.new, HashDict.new)
     
-    assert true
+    assert HashDict.get(counts, "solutions") == 3
+    assert HashDict.get(counts, "upper") == 1
+    assert HashDict.get(counts, "nonstrict") == 1
+    assert HashDict.get(counts, "systems") == 4
   end
 
   test "correct scores" do
@@ -22,6 +35,15 @@ defmodule RakeTest do
     assert results == Rake.get(@text, 1, 0, 3, 1)
   end
 
+  test "maximum word length" do
+    results = [{"considered", 1.0}, {"supporting", 1.0}, {"constructing", 1.0}, {"algorithms", 1.0}, {"generating", 1.0}, {"construction", 1.0}, {"components", 1.0}, {"inequations", 1.0}, {"diophantine", 1.0}, {"compatibility", 1.0}, {"constraints", 1.0}]
+    assert Rake.get(@text, 10, 0, 3, 1) == results
+  end
+  
+  test "minimum keyword appearance count" do
+    results = [{"minimal supporting set", 4.666666666666666}, {"minimal set", 4.666666666666666}, {"minimal generating sets", 2.6666666666666665}, {"set", 2.0}, {"mixed types", 1.6666666666666667}, {"considered types", 1.6666666666666667}, {"types", 1.6666666666666667}, {"systems", 1.0}, {"solutions", 1.0}]
+    assert Rake.get(@text, 1, 0, 3, 3) == results
+  end
 
 end
 
