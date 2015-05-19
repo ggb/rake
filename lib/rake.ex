@@ -38,7 +38,9 @@ defmodule Rake do
   end 
   
   @doc """
-  
+  Creates a tuple of two Dicts, where the first Dict contains information of the 
+  cooccurrances, in which each word from the text appears and the second Dict contains
+  the frequence of appearance for each word.
   """
   def cooccurrence_and_counts([ head | rest ], cooccurence, counts) do
     words = String.split(head, " ")
@@ -59,7 +61,9 @@ defmodule Rake do
   end
   
   @doc """
-  
+  Gets a list of words and determines by special characters or stop words, if a current 
+  word is part of a phrase. So, this function creates from a list of words a list of
+  phrases.
   """
   def get_phrases( [ head | tail ], phrases, words, min_word_char_count ) do
     if Set.member?(@stopwords, String.downcase(head)) or head == "||" or String.length(head) < min_word_char_count do
@@ -69,6 +73,10 @@ defmodule Rake do
     end
   end
   
+  @doc """
+  If there are no more words in the word list, the resulting list of phrases
+  gets mapped to a list of downcase phrases, where additional whitespaces are removed.
+  """
   def get_phrases([], phrases, "", _min_word_char_count) do 
     phrases
     |> Enum.map(fn phrase ->
@@ -79,7 +87,8 @@ defmodule Rake do
   def get_phrases([], phrases, phrase, _min_word_char_count), do: [ phrase | phrases ]
   
   @doc """
-  
+  The function replaces punctuation with special characters to mark sentence borders. It removes 
+  numbers and splits the text by the white spaces.
   """
   def prepare_text(text) do
     pattern = :binary.compile_pattern([".", ",", ":", ";", "!", "?", "(", ")", "'", "\"", "\t", "\n"])
@@ -91,7 +100,8 @@ defmodule Rake do
   end
   
   @doc """
-
+  Creates a score for each word by its degree (# number of cooccurrances)
+  and frequence (# of appearances in the text).
   """
   def calculate_word_scores({ cooc, counts }) do
     Enum.reduce(cooc, HashDict.new, fn { key, inner }, dict -> 
@@ -103,7 +113,8 @@ defmodule Rake do
   end
 
   @doc """
-  
+  Creates a score for each phrase. Therefore the word scores -- long story short -- 
+  are added to one single score.
   """  
   def calculate_phrase_scores(word_scores, min_phrase_length, max_phrase_length, min_keyword_appearence_count, phrases) do
     Enum.reduce(phrases, [], fn phrase, list ->
@@ -125,7 +136,7 @@ defmodule Rake do
   end
   
   @doc """
-  
+  The 'main'-function: Gets a text and some additional parameters to calculate the rake scores.
   """
   def get(text, min_word_char_count, min_phrase_length, max_phrase_length, min_keyword_appearence_count) when is_binary(text) do    
     phrases = prepare_text(text)
@@ -142,6 +153,9 @@ defmodule Rake do
     |> Enum.sort(fn { _, fst}, { _, scd } -> fst > scd end) 
   end
   
+  @doc """
+  Gets a text and takes the predefined default parameters to calculate the rake scores.  
+  """
   def get(text) do
     get(text, @min_word_char_count, @min_phrase_length, @max_phrase_length, @min_keyword_appearence_count)
   end
